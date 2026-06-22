@@ -1,0 +1,54 @@
+name: Build Android App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Copy files to www
+      run: |
+        mkdir -p www
+        cp *.html *.json *.js www/ 2>/dev/null || true
+    
+    - name: Setup Capacitor
+      run: |
+        npx cap init CuentaRegresiva com.tunombre.countdown --web-dir=www
+        npx cap add android
+    
+    - name: Sync Capacitor
+      run: npx cap sync
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+    
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 7
