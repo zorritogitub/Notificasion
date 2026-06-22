@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuenta Regresiva 💕</title>
+    
+    <!-- Ícono -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ff6b6b'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>⏳</text></svg>">
+    
+    <!-- Manifest para PWA -->
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 30px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .emoji-big {
+            font-size: 80px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin: 20px 0 10px;
+            font-weight: 800;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .countdown-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .days-number {
+            font-size: 72px;
+            font-weight: 900;
+            display: block;
+            line-height: 1;
+        }
+        
+        .days-label {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd93d, #ff6b6b);
+            border-radius: 10px;
+            transition: width 1s ease;
+            width: 0%;
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .btn {
+            background: white;
+            color: #ee5a24;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .fecha-input {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 16px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .fecha-input:focus {
+            outline: 2px solid white;
+        }
+        
+        .fecha-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji-big">⏳</div>
+        <h1>Cuenta Regresiva</h1>
+        <p class="subtitle">Faltan para el gran día ❤️</p>
+        
+        <input type="date" class="fecha-input" id="fechaInput" value="2026-08-30">
+        
+        <div class="countdown-box">
+            <span class="days-number" id="daysDisplay">--</span>
+            <span class="days-label">días</span>
+        </div>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="progress-text" id="progressText">Cargando...</p>
+        
+        <button class="btn" onclick="actualizarTodo()">🔄 Actualizar</button>
+        <p class="status" id="statusText">✅ Notificación activa</p>
+    </div>
+    
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let targetDate = new Date('2026-08-30T00:00:00');
+        let intervaloNotificacion = null;
+        
+        // ===== CALCULAR DÍAS =====
+        function calcularDias() {
+            const now = new Date();
+            const diff = targetDate - now;
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            return days;
+        }
+        
+        // ===== ACTUALIZAR INTERFAZ =====
+        function actualizarInterfaz() {
+            const days = calcularDias();
+            const display = document.getElementById('daysDisplay');
+            const progress = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            if (days > 0) {
+                display.textContent = days;
+                // Barra de progreso (asumiendo 365 días máximo)
+                const maxDays = 365;
+                const percent = Math.min((days / maxDays) * 100, 100);
+                progress.style.width = percent + '%';
+                progressText.textContent = `⏳ ${days} días restantes (${Math.round(percent)}%)`;
+            } else if (days === 0) {
+                display.textContent = '🎉';
+                progress.style.width = '100%';
+                progressText.textContent = '¡HOY ES EL DÍA! 🎉';
+            } else {
+                display.textContent = '❤️';
+                progress.style.width = '100%';
+                progressText.textContent = '¡Ya pasó! Pero te sigo queriendo ❤️';
+            }
+        }
+        
+        // ===== ACTUALIZAR TODO =====
+        function actualizarTodo() {
+            // Leer fecha del input
+            const fechaInput = document.getElementById('fechaInput');
+            if (fechaInput.value) {
+                targetDate = new Date(fechaInput.value + 'T00:00:00');
+            }
+            
+            actualizarInterfaz();
+            mostrarNotificacion();
+            
+            document.getElementById('statusText').textContent = '✅ Actualizado';
+            setTimeout(() => {
+                document.getElementById('statusText').textContent = '✅ Notificación activa';
+            }, 2000);
+        }
+        
+        // ===== NOTIFICACIONES =====
+        function activarNotificacion() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        mostrarNotificacion();
+                        // Actualizar cada hora
+                        if (intervaloNotificacion) {
+                            clearInterval(intervaloNotificacion);
+                        }
+                        intervaloNotificacion = setInterval(mostrarNotificacion, 3600000);
+                        document.getElementById('statusText').textContent = '✅ Notificación activa';
+                    } else {
+                        document.getElementById('statusText').textContent = '⚠️ Permiso denegado';
+                    }
+                });
+            }
+        }
+        
+        function mostrarNotificacion() {
+            const days = calcularDias();
+            let mensaje = '';
+            let titulo = '⏳ Cuenta Regresiva';
+            
+            if (days > 0) {
+                mensaje = `Faltan ${days} días para el gran día ❤️`;
+            } else if (days === 0) {
+                mensaje = '¡HOY ES EL GRAN DÍA! 🎉';
+                titulo = '🎉 ¡Llegó el día!';
+            } else {
+                mensaje = '❤️ ¡Ya llegó el gran día! Disfrútalo ❤️';
+                titulo = '❤️ Gran día alcanzado';
+            }
+            
+            // Crear notificación fija
+            try {
+                const notification = new Notification(titulo, {
+                    body: mensaje,
+                    icon: '⏳',
+                    tag: 'countdown_notification',
+                    requireInteraction: true,
+                    silent: false,
+                    vibrate: [200, 100, 200]
+                });
+                
+                notification.onclick = function() {
+                    window.focus();
+                    this.close();
+                };
+            } catch(e) {
+                console.log('Error en notificación:', e);
+            }
+        }
+        
+        // ===== INICIALIZAR =====
+        window.addEventListener('load', function() {
+            // Cargar fecha guardada
+            const fechaGuardada = localStorage.getItem('targetDate');
+            if (fechaGuardada) {
+                document.getElementById('fechaInput').value = fechaGuardada;
+                targetDate = new Date(fechaGuardada + 'T00:00:00');
+            }
+            
+            actualizarInterfaz();
+            activarNotificacion();
+            
+            // Guardar fecha al cambiar
+            document.getElementById('fechaInput').addEventListener('change', function() {
+                localStorage.setItem('targetDate', this.value);
+                actualizarTodo();
+            });
+            
+            // Actualizar cada 60 segundos
+            setInterval(actualizarInterfaz, 60000);
+        });
+    </script>
+</body>
+</html>
